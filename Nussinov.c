@@ -55,7 +55,7 @@ void Nussinov(long L, int* RNA, int* opt){
 	}
 	#define S0(i,j) M(-i+L,j) = 0
 	#define S1(i,j) M(-i+L,j) = 0
-	#define S2(i,j) M(-i+L,j) = max(M(-i+L+1,j),max(M(-i+L,j-1),max((M(-i+L+1,j-1))+(BasePair(RNA(-i+L),RNA(j))),reduce_Nussinov_M_1(L,-i+L,j,RNA,M,opt))))
+	#define S2(i,j) M(-i+L,j) = max(M(-i+L+1,j),max(M(-i+L,j-1),max((M(-i+L+1,j-1))+(BasePair(RNA(-i+L),RNA(j))),reduce_Nussinov_M_1(L,-i+L,j,RNA,M,opt)))) 
 	#define S3(i0,i1) *opt = M(0,L-1)
 	{
 		//Domain
@@ -96,7 +96,7 @@ void Nussinov(long L, int* RNA, int* opt){
 	free(_lin_M);
 	free(M);
 }
-int reduce_Nussinov_M_1(long L, int ip, int jp, int* RNA, int** M, int* opt){
+inline int reduce_Nussinov_M_1(long L, int ip, int jp, int* RNA, int** M, int* opt){
 	int reduceVar = INT_MIN;
 	#define S0(i,j,k) {int __temp__ = (M(i,k))+(M(k+1,j)); reduceVar = max(reduceVar,__temp__); }
 	{
