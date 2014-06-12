@@ -175,6 +175,7 @@ int main(int argc, char** argv) {
 				#define S0() printf("opt=");printf("%d\n",var_opt())
 			#endif
 			S0();
+
 			#undef S0
 		}
 	#elif VERIFY

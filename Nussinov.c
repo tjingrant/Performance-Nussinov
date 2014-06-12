@@ -28,8 +28,6 @@
 #define mallocCheck(v,s,d) if ((v) == NULL) { printf("Failed to allocate memory for %s : size=%lu\n", "sizeof(d)*(s)", sizeof(d)*(s)); exit(-1); }
 
 
-
-
 //Local Function Declarations
 int reduce_Nussinov_M_1(long, int, int, int*, int**, int*);
 
@@ -53,9 +51,10 @@ void Nussinov(long L, int* RNA, int* opt){
 	for (mz1=0;mz1 < L; mz1++) {
 		M[mz1] = &_lin_M[(mz1*(L))];
 	}
+
 	#define S0(i,j) M(-i+L,j) = 0
 	#define S1(i,j) M(-i+L,j) = 0
-	#define S2(i,j) M(-i+L,j) = max(M(-i+L+1,j),max(M(-i+L,j-1),max((M(-i+L+1,j-1))+(BasePair(RNA(-i+L),RNA(j))),reduce_Nussinov_M_1(L,-i+L,j,RNA,M,opt)))) 
+	#define S2(i,j) M(-i+L,j) = max((M(-i+L+1,j-1))+(BasePair(RNA(-i+L),RNA(j))),reduce_Nussinov_M_1(L,-i+L,j,RNA,M,opt))  //speed up by 71%
 	#define S3(i0,i1) *opt = M(0,L-1)
 	{
 		//Domain
@@ -64,21 +63,24 @@ void Nussinov(long L, int* RNA, int* opt){
 		//{i,j|L>=i && i+j>=L+2 && L>=j+1 && L>=2 && j>=1 && i>=2}
 		//{i0,i1|i1==0 && i0==L+1 && L>=2}
 		int c1,c2;
-		for(c2=0;c2 <= L-1;c2+=1)
-		 {
-		 	S0((1),(c2));
-		 }
-		for(c2=0;c2 <= L-2;c2+=1)
-		 {
-		 	S0((2),(c2));
-		 }
-		S1((2),(L-1));
+		M(L-1,L-1) = 0; //optimized
+//		for(c2=0;c2 <= L-1;c2+=1)
+//		 {
+//		 	S0((1),(c2));
+//		 }
+		M(L-2,L-2) = 0; //optimized
+//		for(c2=0;c2 <= L-2;c2+=1)
+//		 {
+//		 	S0((2),(c2));
+//		 }
+		M(L-2,L-1) = 0;
 		for(c1=3;c1 <= L;c1+=1)
 		 {
-		 	for(c2=0;c2 <= -c1+L;c2+=1)
-		 	 {
-		 	 	S0((c1),(c2));
-		 	 }
+//		 	for(c2=0;c2 <= -c1+L;c2+=1) //optimized out
+//		 	 {
+//		 	 	S0((c1),(c2)); //l
+//		 	 }
+		 	S0((c1),(L-c1));
 		 	S1((c1),(-c1+L+1));
 		 	for(c2=-c1+L+2;c2 <= L-1;c2+=1)
 		 	 {
@@ -97,18 +99,19 @@ void Nussinov(long L, int* RNA, int* opt){
 	free(M);
 }
 inline int reduce_Nussinov_M_1(long L, int ip, int jp, int* RNA, int** M, int* opt){
-	int reduceVar = INT_MIN;
-	#define S0(i,j,k) {int __temp__ = (M(i,k))+(M(k+1,j)); reduceVar = max(reduceVar,__temp__); }
+	int reduceVar = (M(ip,ip))+(M(ip+1,jp)); //optimized
+
+	#define S0(i,j,k) {reduceVar = max(reduceVar,(M(i,k))+(M(k+1,j))); } //optimized
 	{
 		//Domain
 		//{i,j,k|ip>=0 && jp>=ip+2 && L>=jp+1 && jp>=1 && L>=ip+2 && L>=2 && k>=i+1 && j>=k+1 && j>=i+2 && i>=0 && L>=i+2 && k>=0 && L>=k+2 && j>=1 && L>=j+1 && ip==i && jp==j}
-		int c3;
-		for(c3=ip+1;c3 <= jp-1;c3+=1)
-		 {
-		 	S0((ip),(jp),(c3));
-		 }
+		for(int c3=ip+1;c3 <= jp-1;c3+=1) //optimized
+		{
+			S0((ip),(jp),(c3));
+		}
 	}
 	#undef S0
+
 	return reduceVar;
 }
 
